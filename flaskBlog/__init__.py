@@ -2,16 +2,40 @@ from flask import Flask
 from flask_sqlalchemy import  SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
+from flask_mail import Mail
+from flaskBlog.config import Config
 
 
-app = Flask(__name__)                               # For flask __main__ #
-app.config['SECRET_KEY'] = '066bb57df532020449df021398de2628'   # For generate a sample secret key and save it #
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'    # For database uri  #
-db = SQLAlchemy(app)                                          # database initialization  #
-bcrypt = Bcrypt(app)                                           # encryption initialization #
-login_manager = LoginManager(app)                              # create a login manager object for authorization
-login_manager.login_view = 'login'                            # for showing Please log in to access this page. for direct account access #
+
+
+db = SQLAlchemy()                                          # database initialization  #
+bcrypt = Bcrypt()                                           # encryption initialization #
+login_manager = LoginManager()                              # create a login manager object for authorization
+login_manager.login_view = 'users.login'                            # for showing Please log in to access this page. for direct account access #
 login_manager.login_message_category = 'info'                # bootstrap class add #
 
+mail = Mail()
 
-from flaskBlog import routes                              # import rest of the route element #
+
+
+
+
+def create_app(config_class=Config):
+    app = Flask(__name__)  # For flask __main__ #
+    app.config.from_object(Config)
+
+    db.init_app(app)
+    bcrypt.init_app(app)
+    login_manager.init_app(app)
+    mail.init_app(app)
+
+    from flaskBlog.users.routes import users
+    from flaskBlog.posts.routes import posts
+    from flaskBlog.main.routes import main
+
+    app.register_blueprint(users)
+    app.register_blueprint(posts)
+    app.register_blueprint(main)
+
+    return app
+
